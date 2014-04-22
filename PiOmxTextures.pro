@@ -41,6 +41,9 @@ TARGET = PiOmxTextures
 contains(DEFINES, CONFIG_LIB) {
 TEMPLATE = lib
 
+INCLUDEPATH += $$_PRO_FILE_PWD_/../LightLogger \
+   $$_PRO_FILE_PWD_/../LightSmartPtr
+
 # Install headers.
 headers.files  = \
    omx_mediaprocessor.h \
@@ -251,7 +254,6 @@ HEADERS  += \
     omx_wrapper/OMXComponent.h \
     omx_wrapper/MyDeleter.h \
 #    glwidget.h \
-    lc_logging.h \
 #    ilclient/ilclient.h \
     omx_wrapper/omxtunnel.h \
     omx_imageelement.h \
