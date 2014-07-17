@@ -43,78 +43,13 @@ extern "C" {
 #include "omx_audioprocessor.h"
 #include "omx_mediaprocessor.h"
 
-#define ENABLE_QML_SAMPLE 1
-
-
-/*----------------------------------------------------------------------
-|    handlerSigsegv
-+---------------------------------------------------------------------*/
-void handlerSigsegv(int sig)
-{
-  void *array[10];
-  size_t size;
-  size = backtrace(array, 10);
-
-  // Print out all the frames to stderr.
-  fprintf(stderr, "Error: signal %d:\n", sig);
-  backtrace_symbols_fd(array, size, 2);
-  exit(1);
-}
-
-/*----------------------------------------------------------------------
-|    handlerSigterm
-+---------------------------------------------------------------------*/
-void handlerSigint(int sig)
-{
-    Q_UNUSED(sig);
-
-    LOG_INFORMATION(LOG_TAG, "Terminating...");
-    qApp->quit();
-}
-
-/*----------------------------------------------------------------------
-|    definitions
-+---------------------------------------------------------------------*/
 int main(int argc, char *argv[])
 {
-#if 0
-    signal(SIGSEGV, handlerSigsegv);
-    signal(SIGINT, handlerSigint);
-#endif
-
     QApplication a(argc, argv);
 
     // Registers all the codecs.
     av_register_all();
 
-#ifdef ENABLE_CUBE_SAMPLE
-    // Check arguments.
-    if (argc < 3) {
-        LOG_ERROR(LOG_TAG, "You have to provide a prefix for the textures to use and the path to the video.");
-        LOG_ERROR(LOG_TAG, "You'll need 6 textures whose abs path is <prefix><n>.jpg with <n> in [0, 5].");
-        LOG_ERROR(LOG_TAG, "Then start the application with <prefix> as the"
-                  " first param and <video_path> as the second.");
-        return -1;
-    }
-
-    // Check file existance.
-    for (int i = 0; i < 6; i++) {
-        QString filePath = QString("%1%2%3").arg(a.arguments().at(1)).arg(i).arg(".jpg");
-        if (!QFile(filePath).exists()) {
-            LOG_ERROR(LOG_TAG, "Couldn't find %s.", qPrintable(filePath));
-            return -1;
-        }
-    }
-    if (!QFile(a.arguments().at(2)).exists()) {
-        LOG_ERROR(LOG_TAG, "Video file does not exist.");
-        return -1;
-    }
-
-    // Build scene.
-    GLWidget widget(a.arguments().at(1), a.arguments().at(2));
-    widget.show();
-#elif ENABLE_QML_SAMPLE
-#ifdef ENABLE_VIDEO_TEST
     qRegisterMetaType<GLuint>("GLuint");
     qRegisterMetaType<OMX_TextureData*>("OMX_TextureData*");
     qmlRegisterType<OMX_ImageElement>("com.luke.qml", 1, 0, "OMXImage");
@@ -124,11 +59,8 @@ int main(int argc, char *argv[])
 
     QQuickView view;
     view.setSource(QUrl(argv[1]));
+    QQmlEngine *engine = QtQml::qmlEngine(view.rootObject());
+    QObject::connect((QObject*)engine, SIGNAL(quit()), &a, SLOT(quit()));
     view.showFullScreen();
-#else
-    OMX_AudioProcessor proc;
-    proc.play();
-#endif // ENABLE_VIDEO_TEST
-#endif // ENABLE_CUBE_SAMPLE
     return a.exec();
 }
