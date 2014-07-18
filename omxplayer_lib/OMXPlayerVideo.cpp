@@ -57,7 +57,7 @@ OMXPlayerVideo::OMXPlayerVideo(OMX_TextureProviderSh provider)
   m_pSubtitleCodec = NULL;
   m_provider       = provider;
   m_max_data_size = 10 * 1024 * 1024;
-  m_fifo_size     = (float)8; # == 4
+  m_fifo_size     = (float)8; // == 4
   m_history_valid_pts = 0;
 
   pthread_cond_init(&m_packet_cond, NULL);
