@@ -50,7 +50,8 @@ headers.files  = \
    omx_textureprovider.h \
    omx_qthread.h \
    omx_globals.h \
-   lc_logging.h
+   lc_logging.h \
+   fileio.h
 headers.path   = $$OUT_PWD/piomxtextures
 
 omxplayer_headers.files = \
@@ -280,7 +281,8 @@ HEADERS  += \
     omx_mediaprocessorelement.h \
     omx_textureprovider.h \
     omx_playeraudio.h \
-    omx_reader.h
+    omx_reader.h \
+    fileio.h
 
 HEADERS += \
     omxplayer_lib/Unicode.h \

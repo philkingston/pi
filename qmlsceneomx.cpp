@@ -42,6 +42,7 @@ extern "C" {
 #include "omx_mediaprocessorelement.h"
 #include "omx_audioprocessor.h"
 #include "omx_mediaprocessor.h"
+#include "fileio.h"
 
 int main(int argc, char *argv[])
 {
@@ -58,7 +59,9 @@ int main(int argc, char *argv[])
     qmlRegisterType<OMX_MediaProcessorElement>("com.luke.qml", 1, 0, "OMXMediaProcessor");
 
     QQuickView view;
+    FileIO fileIO;
     view.setSource(QUrl(argv[1]));
+    view.rootContext()->setContextProperty("fileio", &fileIO);
     QQmlEngine *engine = QtQml::qmlEngine(view.rootObject());
     QObject::connect((QObject*)engine, SIGNAL(quit()), &a, SLOT(quit()));
     view.showFullScreen();
