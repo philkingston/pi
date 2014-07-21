@@ -98,7 +98,6 @@ PKGCONFIG += freetype2
 INCLUDEPATH += \
    omx_wrapper \
    ilclient \
-   3rdparty/include
 
 INCLUDEPATH += \
    omxplayer_lib \
