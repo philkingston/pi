@@ -179,11 +179,7 @@ SOURCES += \
    qmlsceneomx.cpp
 } else {
 SOURCES += \
-   main.cpp \
-#  main_ffmpeg.cpp \
-#  main_v4l2.cpp \
-#  main_demux.cpp \
-#  main_omxplayer.cpp
+   main.cpp
 }
 }
 
@@ -192,19 +188,12 @@ SOURCES += \
     omx_wrapper/Locker.cpp \
     omx_wrapper/Event.cpp \
     omx_wrapper/OMXComponent.cpp \
-#    glwidget.cpp \
-#    ilclient/ilcore.c \
-#    ilclient/ilclient.c \
-#    video.cpp \
     omx_wrapper/omxtunnel.cpp \
     omx_imageelement.cpp \
     omx_videosurfaceelement.cpp \
-#    omx_texturedelement.cpp \
-#    omx_videoprocessor.cpp \     # [1]
     omx_camerasurfaceelement.cpp \
     omx_audioprocessor.cpp \
     omx_mediaprocessor.cpp \
-#    omx_videograph.cpp \         # [1]
     omx_wrapper/OMX_Core.cpp \
     omx_mediaprocessorelement.cpp \
     omx_globals.cpp \
@@ -228,7 +217,6 @@ SOURCES += \
     omxplayer_lib/OMXPlayerVideo.cpp \
     omxplayer_lib/OMXPlayerSubtitles.cpp \
     omxplayer_lib/OMXPlayerAudio.cpp \
-#    omxplayer_lib/omxplayer.cpp \
     omxplayer_lib/OMXOverlayCodecText.cpp \
     omxplayer_lib/OMXCore.cpp \
     omxplayer_lib/OMXClock.cpp \
@@ -254,20 +242,15 @@ HEADERS  += \
     omx_wrapper/Event.h \
     omx_wrapper/OMXComponent.h \
     omx_wrapper/MyDeleter.h \
-#    glwidget.h \
-#    ilclient/ilclient.h \
     omx_wrapper/omxtunnel.h \
     omx_imageelement.h \
     omx_videosurfaceelement.h \
-#    omx_texturedelement.h \    # [1]
-#    omx_videoprocessor.h \
     omx_camerasurfaceelement.h \
     omx_texture.h \
     omx_qthread.h \
     omx_audioprocessor.h \
     omx_globals.h \
     omx_mediaprocessor.h \
-#    omx_videograph.h \         # [1]
     omxplayer_lib/DllOMX.h \
     omxplayer_lib/DllAvFormat.h \
     omxplayer_lib/BitstreamConverter.h \
@@ -318,10 +301,3 @@ OTHER_FILES += \
     omxplayer_lib/Keyboard.h \
     omxplayer_lib/Keyboard.cpp \
     omxplayer_lib/OMXPLAYER_VERSION
-
-contains(DEFINES, CONFIG_APP) {
-contains(DEFINES, CONFIG_QMLSCENEOMX) {
-} else {
-RESOURCES += resources.qrc
-}
-}
