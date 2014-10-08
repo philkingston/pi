@@ -22,10 +22,11 @@
  */
 
 /*----------------------------------------------------------------------
-|    includes
-+---------------------------------------------------------------------*/
+ |    includes
+ +---------------------------------------------------------------------*/
 #include <QApplication>
 #include <QQuickView>
+#include <QTimer>
 
 #include <bcm_host.h>
 #include <signal.h>
@@ -43,27 +44,34 @@ extern "C" {
 #include "omx_audioprocessor.h"
 #include "omx_mediaprocessor.h"
 #include "fileio.h"
+#include "backlight.h"
 
-int main(int argc, char *argv[])
-{
-    QApplication a(argc, argv);
+int main(int argc, char *argv[]) {
+	QApplication a(argc, argv);
 
-    // Registers all the codecs.
-    av_register_all();
+	// Registers all the codecs.
+	av_register_all();
 
-    qRegisterMetaType<GLuint>("GLuint");
-    qRegisterMetaType<OMX_TextureData*>("OMX_TextureData*");
-    qmlRegisterType<OMX_ImageElement>("com.luke.qml", 1, 0, "OMXImage");
-    qmlRegisterType<OMX_VideoSurfaceElement>("com.luke.qml", 1, 0, "OMXVideoSurface");
-    qmlRegisterType<OMX_CameraSurfaceElement>("com.luke.qml", 1, 0, "OMXCameraSurface");
-    qmlRegisterType<OMX_MediaProcessorElement>("com.luke.qml", 1, 0, "OMXMediaProcessor");
+	qRegisterMetaType < GLuint > ("GLuint");
+	qRegisterMetaType<OMX_TextureData*>("OMX_TextureData*");
+	qmlRegisterType < OMX_ImageElement > ("com.luke.qml", 1, 0, "OMXImage");
+	qmlRegisterType < OMX_VideoSurfaceElement
+			> ("com.luke.qml", 1, 0, "OMXVideoSurface");
+	qmlRegisterType < OMX_CameraSurfaceElement
+			> ("com.luke.qml", 1, 0, "OMXCameraSurface");
+	qmlRegisterType < OMX_MediaProcessorElement
+			> ("com.luke.qml", 1, 0, "OMXMediaProcessor");
 
-    QQuickView view;
-    FileIO fileIO;
-    view.setSource(QUrl(argv[1]));
-    view.rootContext()->setContextProperty("fileio", &fileIO);
-    QQmlEngine *engine = QtQml::qmlEngine(view.rootObject());
-    QObject::connect((QObject*)engine, SIGNAL(quit()), &a, SLOT(quit()));
-    view.showFullScreen();
-    return a.exec();
+	QQuickView view;
+	FileIO fileIO;
+	view.setSource(QUrl(argv[1]));
+	view.rootContext()->setContextProperty("fileio", &fileIO);
+	Backlight backlight;
+	view.rootContext()->setContextProperty("backlight", &backlight);
+
+	QQmlEngine *engine = QtQml::qmlEngine(view.rootObject());
+	QObject::connect((QObject*) engine, SIGNAL(quit()), &a, SLOT(quit()));
+	view.showFullScreen();
+
+	return a.exec();
 }

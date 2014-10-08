@@ -51,7 +51,8 @@ headers.files  = \
    omx_qthread.h \
    omx_globals.h \
    lc_logging.h \
-   fileio.h
+   fileio.h \
+   backlight.h
 headers.path   = $$OUT_PWD/piomxtextures
 
 omxplayer_headers.files = \
@@ -172,17 +173,9 @@ QMAKE_CXXFLAGS += -std=c++11 -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS     
 
 # [1]: part of implementation without omxplayer.
 
-contains(DEFINES, CONFIG_APP) {
-contains(DEFINES, CONFIG_QMLSCENEOMX) {
 SOURCES += \
-   qmlsceneomx.cpp
-} else {
-SOURCES += \
-   main.cpp
-}
-}
-
-SOURCES += \
+	qmlsceneomx.cpp \
+	screenCapture.cpp \
     openmaxiltextureloader.cpp \
     omx_wrapper/Locker.cpp \
     omx_wrapper/Event.cpp \
@@ -264,7 +257,8 @@ HEADERS  += \
     omx_textureprovider.h \
     omx_playeraudio.h \
     omx_reader.h \
-    fileio.h
+    fileio.h \
+    backlight.h
 
 HEADERS += \
     omxplayer_lib/Unicode.h \
