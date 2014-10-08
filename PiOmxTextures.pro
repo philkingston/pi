@@ -175,7 +175,6 @@ QMAKE_CXXFLAGS += -std=c++11 -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS     
 
 SOURCES += \
 	qmlsceneomx.cpp \
-	screenCapture.cpp \
     openmaxiltextureloader.cpp \
     omx_wrapper/Locker.cpp \
     omx_wrapper/Event.cpp \
