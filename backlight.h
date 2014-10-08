@@ -11,9 +11,6 @@ class Backlight: public QObject {
 public slots:
 	bool write(const QString& data)
 	{
-		if (source.isEmpty())
-		return false;
-
 		QFile file("/dev/spidev0.0");
 		if (!file.open(QFile::WriteOnly | QFile::Truncate))
 		return false;
