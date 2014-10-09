@@ -47,6 +47,10 @@ extern "C" {
 #include "backlight.h"
 
 int main(int argc, char *argv[]) {
+	if(argc != 2) {
+		cout << "view20 requires a qml file" << endl;
+		return -1;
+	}
 	QApplication a(argc, argv);
 
 	// Registers all the codecs.
