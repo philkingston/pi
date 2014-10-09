@@ -75,6 +75,8 @@ public:
 
 	Backlight() {
 		dataQueue.empty();
+
+		// Instantiate the thread to process the incoming data
 		pthread_create(&thread, NULL, &queueProcessor, (void*) this);
 	}
 };
