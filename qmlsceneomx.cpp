@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
 	FileIO fileIO;
 	view.setSource(QUrl(argv[1]));
 	view.rootContext()->setContextProperty("fileio", &fileIO);
-	Backlight backlight;
+	Backlight backlight(&view);
 	view.rootContext()->setContextProperty("backlight", &backlight);
 
 	QQmlEngine *engine = QtQml::qmlEngine(view.rootObject());

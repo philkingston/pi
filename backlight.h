@@ -6,6 +6,22 @@
 #include <iostream>
 #include <queue>
 #include <pthread.h>
+#include <QPixmap>
+#include <QApplication>
+#include <QScreen>
+#include <QWindow>
+#include <QDebug>
+#include <QQuickView>
+#include <QQuickItem>
+#include <QImage>
+#include <QRgb>
+#include <QColor>
+#include <QSize>
+#include <QUrl>
+#include <QQmlEngine>
+#include <QQmlContext>
+#include <QQuickImageProvider>
+#include <QQmlImageProviderBase>
 
 using namespace std;
 
@@ -18,15 +34,48 @@ private:
 	queue<QString> dataQueue;
 
 public slots:
-	bool write(const QString& data) {
+	bool write(const QString &data) {
 		// Simply push the data to the queue.
 		dataQueue.push(data);
+		return true;
+	}
 
+	bool mapImage(const QString &path) {
+		QImage image;
+		QString file = path;
+		file.remove(0, 7);
+		image.load(file);
+
+		QString pixData = "";
+		QImage scaledImage = image.scaled(QSize(14, 9));
+		QRgb p;
+		for (int y = 8; y >= 0; y--) {
+			p = scaledImage.pixel(11, y);
+			pixData += (char) ((p >> 16 & 0xFF));
+			pixData += (char) ((p >> 8 & 0xFF));
+			pixData += (char) (p & 0xFF);
+		}
+		for (int x = 12; x >= 1; x--) {
+			p = scaledImage.pixel(x, 0);
+			pixData += (char) ((p >> 16 & 0xFF));
+			pixData += (char) ((p >> 8 & 0xFF));
+			pixData += (char) (p & 0xFF);
+		}
+		for (int y = 0; y < 9; y++) {
+			p = scaledImage.pixel(0, y);
+			pixData += (char) ((p >> 16 & 0xFF));
+			pixData += (char) ((p >> 8 & 0xFF));
+			pixData += (char) (p & 0xFF);
+		}
+		dataQueue.push(pixData);
 		return true;
 	}
 
 public:
-	pthread_t thread;
+	pthread_t thread1;
+	pthread_t thread2;
+	QApplication *app;
+	QQuickView *view;
 
 	queue<QString> getQueue() {
 		return dataQueue;
@@ -73,10 +122,15 @@ public:
 		pthread_exit (NULL);
 	}
 
-	Backlight() {
+	Backlight(QQuickView *v) {
+		view = v;
 		dataQueue.empty();
 
 		// Instantiate the thread to process the incoming data
-		pthread_create(&thread, NULL, &queueProcessor, (void*) this);
+		pthread_create(&thread1, NULL, &queueProcessor, (void*) this);
+	}
+
+	~Backlight() {
+		cout << "quit backlight" << endl;
 	}
 };
