@@ -53,7 +53,8 @@ headers.files  = \
    lc_logging.h \
    fileio.h \
    backlight.h \
-   watchdog.h
+   watchdog.h \
+   screendimensions.h
 
 headers.path   = $$OUT_PWD/piomxtextures
 
@@ -261,6 +262,7 @@ HEADERS  += \
     fileio.h \
     backlight.h \
     watchdog.h \
+    screendimensions.h \
     omxplayer_lib/Unicode.h \
     omxplayer_lib/SubtitleRenderer.h \
     omxplayer_lib/OMXVideo.h \

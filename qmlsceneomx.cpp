@@ -25,8 +25,10 @@
  |    includes
  +---------------------------------------------------------------------*/
 #include <QApplication>
+#include <QDesktopWidget>
 #include <QQuickView>
 #include <QTimer>
+#include <QDebug>
 
 #include <bcm_host.h>
 #include <signal.h>
@@ -46,10 +48,11 @@ extern "C" {
 #include "fileio.h"
 #include "watchdog.h"
 #include "backlight.h"
+#include "screendimensions.h"
 
 int main(int argc, char *argv[]) {
-	if(argc != 2) {
-		cout << "view20 requires a qml file" << endl;
+	if (argc != 2) {
+		cout << "Error: view20 requires a QML file" << endl;
 		return -1;
 	}
 	QApplication a(argc, argv);
@@ -68,14 +71,20 @@ int main(int argc, char *argv[]) {
 			> ("com.luke.qml", 1, 0, "OMXMediaProcessor");
 
 	QQuickView view;
-	view.setSource(QUrl(argv[1]));
-	
+
+	// Additional modules
 	FileIO fileIO;
 	Watchdog watchdog;
 	Backlight backlight(&view);
+	QRect rect = QApplication::desktop()->screenGeometry();
+	ScreenDimensions screenDimensions(&rect);
 	view.rootContext()->setContextProperty("fileio", &fileIO);
 	view.rootContext()->setContextProperty("watchdog", &watchdog);
 	view.rootContext()->setContextProperty("backlight", &backlight);
+	view.rootContext()->setContextProperty("screensize", &screenDimensions);
+	
+	// QML file to run (command line argument)
+	view.setSource(QUrl(argv[1]));
 
 	QQmlEngine *engine = QtQml::qmlEngine(view.rootObject());
 	QObject::connect((QObject*) engine, SIGNAL(quit()), &a, SLOT(quit()));
