@@ -876,7 +876,7 @@ OMX_ERRORTYPE COMXCoreComponent::FreeOutputBuffers()
   WaitForOutputDone(1000);
 
   pthread_mutex_lock(&m_omx_output_mutex);
-  assert(m_omx_output_buffers.size() == m_omx_output_available.size());
+  //assert(m_omx_output_buffers.size() == m_omx_output_available.size());
 
   m_omx_output_buffers.clear();
 

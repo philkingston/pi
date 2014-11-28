@@ -25,8 +25,8 @@
 #define PO_VIDEOSURFACEELEMENT_H
 
 /*------------------------------------------------------------------------------
-|    includes
-+-----------------------------------------------------------------------------*/
+ |    includes
+ +-----------------------------------------------------------------------------*/
 #include <QtQuick/QQuickItem>
 #include <QOpenGLContext>
 #include <QTimer>
@@ -36,57 +36,56 @@
 #include "omx_textureprovider.h"
 
 /*------------------------------------------------------------------------------
-|    definitions
-+-----------------------------------------------------------------------------*/
+ |    definitions
+ +-----------------------------------------------------------------------------*/
 class OMX_SGTexture;
 class OMX_MediaProcessor;
 
-
 /*------------------------------------------------------------------------------
-|    OMX_VideoSurfaceElement class
-+-----------------------------------------------------------------------------*/
-class OMX_VideoSurfaceElement : public QQuickItem
-{
-    Q_OBJECT
-    Q_PROPERTY(QObject* source READ source WRITE setSource NOTIFY sourceChanged)
+ |    OMX_VideoSurfaceElement class
+ +-----------------------------------------------------------------------------*/
+class OMX_VideoSurfaceElement: public QQuickItem {
+	Q_OBJECT
+	Q_PROPERTY(QObject* source READ source WRITE setSource NOTIFY sourceChanged)
 public:
-    OMX_VideoSurfaceElement(QQuickItem* parent = 0);
-    ~OMX_VideoSurfaceElement();
+	OMX_VideoSurfaceElement(QQuickItem* parent = 0);
+	~OMX_VideoSurfaceElement();
 
-    QSGNode* updatePaintNode(QSGNode*, UpdatePaintNodeData*);
+	QSGNode* updatePaintNode(QSGNode*, UpdatePaintNodeData*);
 
-    void setSource(QObject* source);
+	void setSource(QObject* source);
+	void setOpacity(qreal);
 
-    QObject* source() {
-        return m_source;
-    }
+	QObject* source() {
+		return m_source;
+	}
 
-    QSGTextureProvider* textureProvider() const {
-        return (QSGTextureProvider*)m_sgtexture;
-    }
+	QSGTextureProvider* textureProvider() const {
+		return (QSGTextureProvider*) m_sgtexture;
+	}
 
-signals:
-    void sourceChanged(const QObject* source);
+	signals:
+	void sourceChanged(const QObject* source);
 
 public slots:
-    void onTextureChanged(const OMX_TextureData* textureData);
-    void onTextureInvalidated();
+	void onTextureChanged(const OMX_TextureData* textureData);
+	void onTextureInvalidated();
 
 private:
-    void setTexture();
+	void setTexture();
 
-    OMX_MediaProcessorElement* m_source;
+	OMX_MediaProcessorElement* m_source;
 #ifdef ENABLE_VIDEO_PROCESSOR
-    OMX_VideoProcessor* m_videoProc;
+	OMX_VideoProcessor* m_videoProc;
 #else
-    OMX_MediaProcessor* m_mediaProc;
+	OMX_MediaProcessor* m_mediaProc;
 #endif
-    OMX_SGTexture* m_sgtexture;
+	OMX_SGTexture* m_sgtexture;
 
-    QMutex m_mutexTexture; // Use to access texture members.
-    QSize  m_textureSize;
-    GLuint m_textureId;
-    QTimer* m_timer;
+	QMutex m_mutexTexture; // Use to access texture members.
+	QSize m_textureSize;
+	GLuint m_textureId;
+	QTimer* m_timer;
 };
 
 #endif // PO_VIDEOSURFACEELEMENT_H

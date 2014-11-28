@@ -85,7 +85,7 @@ COMXVideo::COMXVideo(OMX_TextureProviderSh provider) : m_video_codec_name("")
   m_extrasize         = 0;
   m_deinterlace       = false;
   m_deinterlace_request = VS_DEINTERLACEMODE_OFF;
-  m_hdmi_clock_sync   = false;
+  m_hdmi_clock_sync   = true;
   m_drop_state        = false;
   m_decoded_width     = 0;
   m_decoded_height    = 0;
@@ -412,7 +412,7 @@ bool COMXVideo::Open(COMXStreamInfo &hints, OMXClock *clock, float display_aspec
   QSize videoSize(hints.width, hints.height);
   if (!m_textureData) {
      m_textureData = m_provider->instantiateTexture(videoSize);
-     LOG_VERBOSE(LOG_TAG, "Texture generated!");
+     LOG_VERBOSE(LOG_TAG, "Texture generated!!");
   }
   else {
      // It means the user wants to re-use the texture. Just double-check the size is correct.

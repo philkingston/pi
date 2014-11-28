@@ -44,6 +44,7 @@ extern "C" {
 #include "omx_audioprocessor.h"
 #include "omx_mediaprocessor.h"
 #include "fileio.h"
+#include "watchdog.h"
 #include "backlight.h"
 
 int main(int argc, char *argv[]) {
@@ -67,10 +68,13 @@ int main(int argc, char *argv[]) {
 			> ("com.luke.qml", 1, 0, "OMXMediaProcessor");
 
 	QQuickView view;
-	FileIO fileIO;
 	view.setSource(QUrl(argv[1]));
-	view.rootContext()->setContextProperty("fileio", &fileIO);
+	
+	FileIO fileIO;
+	Watchdog watchdog;
 	Backlight backlight(&view);
+	view.rootContext()->setContextProperty("fileio", &fileIO);
+	view.rootContext()->setContextProperty("watchdog", &watchdog);
 	view.rootContext()->setContextProperty("backlight", &backlight);
 
 	QQmlEngine *engine = QtQml::qmlEngine(view.rootObject());

@@ -52,7 +52,9 @@ headers.files  = \
    omx_globals.h \
    lc_logging.h \
    fileio.h \
-   backlight.h
+   backlight.h \
+   watchdog.h
+
 headers.path   = $$OUT_PWD/piomxtextures
 
 omxplayer_headers.files = \
@@ -257,9 +259,8 @@ HEADERS  += \
     omx_playeraudio.h \
     omx_reader.h \
     fileio.h \
-    backlight.h
-
-HEADERS += \
+    backlight.h \
+    watchdog.h \
     omxplayer_lib/Unicode.h \
     omxplayer_lib/SubtitleRenderer.h \
     omxplayer_lib/OMXVideo.h \

@@ -121,7 +121,9 @@ OMX_TextureData* OMX_TextureProviderQQuickItem::instantiateTexture(QSize size)
    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
    // It seems that only 4byte pixels is supported here.
-   GLubyte* pixel = new GLubyte[size.width()*size.height()*4];
+   int pixelSize = size.width() * size.height() * 4;
+   GLubyte* pixel = new GLubyte[pixelSize];
+   memset(pixel, 0, pixelSize);
    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.width(), size.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
 
    EGLImageKHR eglImage = eglCreateImageKHR(
