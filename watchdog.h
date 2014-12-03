@@ -18,6 +18,12 @@ public slots:
 		out << "1";
 		return true;
 	}
+	
+	bool stop() {
+		QTextStream out(&file);
+		out << "V";
+		return true;
+	}
 
 public:
 	const QString filename = "/dev/watchdog";
