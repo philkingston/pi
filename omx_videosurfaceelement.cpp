@@ -44,23 +44,17 @@
  |    OMX_ImageElement::OMX_ImageElement
  +-----------------------------------------------------------------------------*/
 OMX_VideoSurfaceElement::OMX_VideoSurfaceElement(QQuickItem *parent) :
-		QQuickItem(parent), m_source(NULL),
-#ifdef ENABLE_VIDEO_PROCESSOR
-				m_videoProc(NULL) // Cannot be init yet. EGL is not ready.
-#elif ENABLE_MEDIA_PROCESSOR
-				m_mediaProc(NULL), // Cannot be init yet. EGL is not ready.
-#else
-				m_mediaProc(NULL),
-#endif
-				m_sgtexture(new OMX_SGTexture(0, QSize(0, 0))), m_textureSize(
-						QSize(0, 0)), m_textureId(0) {
+		QQuickItem(parent), m_source(NULL), m_sgtexture(
+				new OMX_SGTexture(0, QSize(0, 0))), m_textureSize(QSize(0, 0)), m_texData(
+				NULL) {
 	setFlag(ItemHasContents, true);
 
 	// TODO: Avoid updating when not needed.
 	m_timer = new QTimer(this);
 	m_timer->setSingleShot(false);
+	connect(m_timer, SIGNAL(timeout()), this, SLOT(onTextureUpdate()));
 	connect(m_timer, SIGNAL(timeout()), this, SLOT(update()));
-	m_timer->start(40);
+	m_timer->start(30);
 }
 
 /*------------------------------------------------------------------------------
@@ -93,47 +87,19 @@ QSGNode* OMX_VideoSurfaceElement::updatePaintNode(QSGNode* oldNode,
 		node->setFlag(QSGNode::OwnsGeometry);
 
 		// TODO: Who is freeing the material?
-		QSGTextureMaterial* material = new QSGTextureMaterial;
+		QSGOpaqueTextureMaterial* material = new QSGOpaqueTextureMaterial;
 		material->setTexture(m_sgtexture);
 		node->setMaterial(material);
 		node->setFlag(QSGNode::OwnsMaterial);
-
-#ifdef ENABLE_VIDEO_PROCESSOR
-		QPlatformNativeInterface* nativeInterface =
-		QGuiApplicationPrivate::platformIntegration()->nativeInterface();
-		Q_ASSERT(nativeInterface);
-		EGLDisplay eglDisplay = nativeInterface->nativeResourceForIntegration("egldisplay");
-		EGLContext eglContext = nativeInterface->nativeResourceForContext(
-				"eglcontext",
-				QOpenGLContext::currentContext()
-		);
-#endif
-		// Provider MUST be built in this thread.
-#ifdef ENABLE_VIDEO_PROCESSOR
-		m_videoProc = new OMX_VideoProcessor(eglDisplay, eglContext, m_provider);
-		connect(m_videoProc, SIGNAL(textureReady(uint)), this, SLOT(onTextureChanged(uint)));
-		if (!m_source.isNull())
-		m_videoProc->setVideoPath(m_source);
-		if (m_playScheduled) {
-			m_timer->start(30);
-			m_videoProc->play();
-		}
-#elif ENABLE_MEDIA_PROCESSOR
-#else
-		LOG_VERBOSE(LOG_TAG, "Starting video...");
-		QtConcurrent::run(&startVideo, m_provider, this);
-		m_timer->start(30);
-#endif
 	} else {
 		node = static_cast<QSGGeometryNode*>(oldNode);
 		geometry = node->geometry();
-		//geometry->allocate(4);
 
 		// Texture has changed. Change the texture item for the scene graph.
-		if ((GLuint) m_sgtexture->textureId() != m_textureId) {
-			QMutexLocker locker(&m_mutexTexture);
-			m_sgtexture->setTexture(m_textureId, m_textureSize);
-		}
+		QMutexLocker locker(&m_mutexTexture);
+		if (m_texData
+				&& (GLuint) m_sgtexture->textureId() != m_texData->m_textureId)
+			m_sgtexture->setTexture(m_texData->m_textureId, m_textureSize);
 
 		// This is needed since Qt 5.1.1.
 		node->markDirty(QSGNode::DirtyMaterial);
@@ -143,11 +109,11 @@ QSGNode* OMX_VideoSurfaceElement::updatePaintNode(QSGNode* oldNode,
 	QRectF bounds = boundingRect();
 	QSGGeometry::TexturedPoint2D* vertices =
 			geometry->vertexDataAsTexturedPoint2D();
-	vertices[0].set(bounds.x(), bounds.y() + bounds.height(), 0.0f, 0.0f);
-	vertices[1].set(bounds.x() + bounds.width(), bounds.y() + bounds.height(),
-			1.0f, 0.0f);
-	vertices[2].set(bounds.x(), bounds.y(), 0.0f, 1.0f);
-	vertices[3].set(bounds.x() + bounds.width(), bounds.y(), 1.0f, 1.0f);
+	vertices[3].set(bounds.x(), bounds.y() + bounds.height(), 0.0f, 1.0f);
+	vertices[2].set(bounds.x() + bounds.width(), bounds.y() + bounds.height(),
+			1.0f, 1.0f);
+	vertices[1].set(bounds.x(), bounds.y(), 0.0f, 0.0f);
+	vertices[0].set(bounds.x() + bounds.width(), bounds.y(), 1.0f, 0.0f);
 	return node;
 }
 
@@ -159,40 +125,25 @@ void OMX_VideoSurfaceElement::setSource(QObject* source) {
 	if (m_source)
 		disconnect(m_source);
 
-	// Reset the current texture.
-	//onTextureChanged(0, QSize(0, 0));
-	onTextureInvalidated();
-
 	// Get notifications from the OMX_MediaProcessorElement related to this
 	// OMX_VideoSurfaceElement of the texture I should use.
 	m_source = (OMX_MediaProcessorElement*) source;
-	connect(m_source, SIGNAL(textureReady(const OMX_TextureData*)),
-			this, SLOT(onTextureChanged(const OMX_TextureData*)), Qt::DirectConnection);
-	connect(m_source, SIGNAL(textureInvalidated()), this,
-			SLOT(onTextureInvalidated()), Qt::DirectConnection);
 	emit sourceChanged(source);
 }
 
 /*------------------------------------------------------------------------------
- |    OMX_VideoSurfaceElement::onTextureChanged
+ |    OMX_VideoSurfaceElement::onTextureUpdate
  +-----------------------------------------------------------------------------*/
-void OMX_VideoSurfaceElement::onTextureChanged(
-		const OMX_TextureData* textureData) {
-	LOG_INFORMATION(LOG_TAG, "Setting new texture %u!",
-			textureData->m_textureId);
+void OMX_VideoSurfaceElement::onTextureUpdate() {
+	if (!m_source || !m_source->m_buffProvider.get())
+		return;
 
-	QMutexLocker locker(&m_mutexTexture);
-	m_textureId = textureData->m_textureId;
-	m_textureSize = textureData->m_textureSize;
-}
+	OMX_TextureData* data = m_source->m_buffProvider->getNextFilledBuffer();
+	if (data) {
+		if (m_texData)
+			m_source->m_buffProvider->appendEmptyBuffer(m_texData);
 
-/*------------------------------------------------------------------------------
- |    OMX_VideoSurfaceElement::onTextureInvalidated
- +-----------------------------------------------------------------------------*/
-void OMX_VideoSurfaceElement::onTextureInvalidated() {
-	LOG_VERBOSE(LOG_TAG, "Texture was invalidated. Switching to 0.");
-
-	QMutexLocker locker(&m_mutexTexture);
-	m_textureId = 0;
-	m_textureSize = QSize(0, 0);
+		QMutexLocker locker(&m_mutexTexture);
+		m_texData = data;
+	}
 }

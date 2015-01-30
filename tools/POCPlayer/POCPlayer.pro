@@ -46,4 +46,7 @@ OTHER_FILES += qml/main.qml \
     qml/POC_ArrayUtils.js \
     qml/POC_ControlBarVideo.qml \
     qml/POC_ControlBarImage.qml \
-    qml/POC_ImageOutputSurface.qml
+    qml/POC_ImageOutputSurface.qml \
+    qml/main_animations.qml \
+    qml/POC_CrossImage.qml \
+    qml/POC_VideoOutputSurface.qml

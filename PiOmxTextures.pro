@@ -32,6 +32,8 @@ error("Either add CONFIG_APP or CONFIG_LIB to DEFINES.")
 }
 
 QT += core core-private gui gui-private opengl quick quick-private
+INCLUDEPATH += $$_PRO_FILE_PWD_/../LightLogger \
+   $$_PRO_FILE_PWD_/../LightSmartPtr
 
 contains(DEFINES, CONFIG_QMLSCENEOMX) {
 TARGET = qmlsceneomx
@@ -40,9 +42,6 @@ TARGET = PiOmxTextures
 }
 contains(DEFINES, CONFIG_LIB) {
 TEMPLATE = lib
-
-INCLUDEPATH += $$_PRO_FILE_PWD_/../LightLogger \
-   $$_PRO_FILE_PWD_/../LightSmartPtr
 
 # Install headers.
 headers.files  = \
@@ -83,7 +82,8 @@ LIBS += $$_PRO_FILE_PWD_/3rdparty/ffmpeg/lib/libavformat.a \
    $$_PRO_FILE_PWD_/3rdparty/ffmpeg/lib/libavcodec.a \
    $$_PRO_FILE_PWD_/3rdparty/ffmpeg/lib/libavutil.a \
    $$_PRO_FILE_PWD_/3rdparty/ffmpeg/lib/libswscale.a \
-   $$_PRO_FILE_PWD_/3rdparty/ffmpeg/lib/libswresample.a
+   $$_PRO_FILE_PWD_/3rdparty/ffmpeg/lib/libswresample.a \
+   -lz -lssl -lcrypto
 }
 else {
 LIBS += -L$$_PRO_FILE_PWD_/3rdparty/ffmpeg/lib \
@@ -108,7 +108,7 @@ INCLUDEPATH += \
    omxplayer_lib/utils \
    omxplayer_lib/linux
 
-VERSION = 4.2.0
+VERSION = 4.4.0
 
 # Flags used by hello_pi examples:
 #-DSTANDALONE -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS
@@ -135,7 +135,7 @@ DEFINES += __STDC_CONSTANT_MACROS \
    HAVE_OMXLIB
 
 # Macro definitions
-#DEFINES += LOG_LEVEL_DEBUG
+DEFINES += BUILD_LOG_LEVEL_VERBOSE
 DEFINES += VERBOSE
 DEFINES += ENABLE_VIDEO_TEST
 DEFINES += ENABLE_MEDIA_PROCESSOR
@@ -253,7 +253,6 @@ HEADERS  += \
     omx_wrapper/OMX_Core.h \
     omxplayer_lib/DllSwResample.h \
     omxplayer_lib/DllAvUtil.h \
-    omxplayer_lib/DllAvFilter.h \
     omxplayer_lib/DllAvCodec.h \
     omx_mediaprocessorelement.h \
     omx_textureprovider.h \
@@ -296,3 +295,7 @@ OTHER_FILES += \
     omxplayer_lib/Keyboard.h \
     omxplayer_lib/Keyboard.cpp \
     omxplayer_lib/OMXPLAYER_VERSION
+
+contains(DEFINES, CONFIG_APP) {
+RESOURCES += resources.qrc
+}

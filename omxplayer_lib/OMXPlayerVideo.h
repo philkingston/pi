@@ -24,7 +24,6 @@
 
 #include "DllAvUtil.h"
 #include "DllAvFormat.h"
-#include "DllAvFilter.h"
 #include "DllAvCodec.h"
 
 #include "OMXReader.h"
@@ -35,23 +34,17 @@
 
 #include <deque>
 #include <sys/types.h>
-#include <memory>
-
-#include "OMXOverlayCodec.h"
-#include "OMXOverlayText.h"
-#include "OMXOverlayCodecText.h"
 
 #include <string>
 #include <atomic>
 
 #include <QObject>
+#include "omx_textureprovider.h"
 
 using namespace std;
 
 class OMX_TextureProvider;
 class OMX_VideoSurfaceElement;
-
-typedef shared_ptr<OMX_TextureProvider> OMX_TextureProviderSh;
 
 class OMXPlayerVideo : public QObject, public OMXThread
 {
@@ -59,9 +52,7 @@ class OMXPlayerVideo : public QObject, public OMXThread
 protected:
   AVStream                  *m_pStream;
   int                       m_stream_id;
-  std::deque<OMXPacket *>   m_subtitle_packets;
   std::deque<OMXPacket *>   m_packets;
-  std::deque<COMXOverlay *> m_overlays;
   DllAvUtil                 m_dllAvUtil;
   DllAvCodec                m_dllAvCodec;
   DllAvFormat               m_dllAvFormat;
@@ -71,14 +62,13 @@ protected:
   pthread_cond_t            m_packet_cond;
   pthread_cond_t            m_picture_cond;
   pthread_mutex_t           m_lock;
-  pthread_mutex_t           m_subtitle;
   pthread_mutex_t           m_lock_decoder;
-  pthread_mutex_t           m_lock_subtitle;
   OMXClock                  *m_av_clock;
   COMXVideo                 *m_decoder;
   float                     m_fps;
   double                    m_frametime;
   EDEINTERLACEMODE          m_Deinterlace;
+  OMX_IMAGEFILTERANAGLYPHTYPE m_anaglyph;
   float                     m_display_aspect;
   bool                      m_bAbort;
   bool                      m_use_thread;
@@ -89,29 +79,26 @@ protected:
   float                     m_fifo_size;
   bool                      m_hdmi_clock_sync;
   double                    m_iVideoDelay;
-  double                    m_iSubtitleDelay;
-  COMXOverlayCodec          *m_pSubtitleCodec;
-  OMX_TextureProviderSh     m_provider;
+  OMX_EGLBufferProviderSh   m_provider;
   uint32_t                  m_history_valid_pts;
+  int                       m_display;
+  int                       m_layer;
 
   void Lock();
   void UnLock();
   void LockDecoder();
   void UnLockDecoder();
-  void LockSubtitles();
-  void UnLockSubtitles();
 private:
 public:
-  OMXPlayerVideo(OMX_TextureProviderSh provider);
+  OMXPlayerVideo(OMX_EGLBufferProviderSh provider);
   ~OMXPlayerVideo();
-  bool Open(COMXStreamInfo &hints, OMXClock *av_clock, OMX_TextureData*& textureId, EDEINTERLACEMODE deinterlace, bool hdmi_clock_sync, bool use_thread, float display_aspect, float queue_size, float fifo_size);
+  bool Open(COMXStreamInfo &hints, OMXClock *av_clock, EDEINTERLACEMODE deinterlace, OMX_IMAGEFILTERANAGLYPHTYPE anaglyph, bool hdmi_clock_sync, bool use_thread, float display_aspect, int display, int layer, float queue_size, float fifo_size);
   bool Close();
   bool Decode(OMXPacket *pkt);
   void Process();
-  void FlushSubtitles();
   void Flush();
   bool AddPacket(OMXPacket *pkt);
-  bool OpenDecoder(OMX_TextureData* textureData);
+  bool OpenDecoder();
   bool CloseDecoder();
   int  GetDecoderBufferSize();
   int  GetDecoderFreeSpace();
@@ -124,11 +111,5 @@ public:
   bool IsEOS();
   void SetDelay(double delay) { m_iVideoDelay = delay; }
   double GetDelay() { return m_iVideoDelay; }
-  double GetSubtitleDelay()                                { return m_iSubtitleDelay; }
-  void SetSubtitleDelay(double delay)                      { m_iSubtitleDelay = delay; }
-  std::string GetText();
-
-signals:
-  void textureDataReady(const OMX_TextureData* textureData);
 };
 #endif

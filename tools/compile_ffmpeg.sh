@@ -11,13 +11,34 @@
 # Usage:
 #    ./compile_ffmpeg.sh <n>, where n is the number of compilation threads to use.
 
+function check_exists_dir {
+   if [ ! -d $1 ]; then
+      echo "$1 does not exist."
+      exit
+   fi
+}
+
 # Check the user provided the number of threads to use when building.
 if [ $# -ne 1 ]; then
    echo "Illegal arguments. Please provide just one parameter with the number of parallel threads to use when building."
    exit
 fi
 
-${RPI_SYSROOT:?"Please, set the path to your sysroot in RPI_SYSROOT first."}
+# Check env.
+TEST="${RPI_SYSROOT:=false}"
+if [ "$TEST" == "false" ]; then
+   echo "Please set RPI_SYSROOT."
+   exit
+fi
+
+TEST="${COMPILER_PATH:=false}"
+if [ "$TEST" == "false" ]; then
+   echo "Please set COMPILER_PATH."
+   exit
+fi
+
+check_exists_dir "$RPI_SYSROOT"
+check_exists_dir "$COMPILER_PATH"
 
 echo "Downloading ffmpeg sources from git..."
 cd ..
@@ -26,16 +47,17 @@ if [ ! -d "3rdparty/ffmpeg" ]; then
 fi
 
 cd 3rdparty/ffmpeg
-git clone git://source.ffmpeg.org/ffmpeg ffmpeg_src
-cd ffmpeg_src; git checkout n2.2
+git clone git://source.ffmpeg.org/ffmpeg ffmpeg_src -bn2.5 --depth=1
+cd ffmpeg_src;
+
+export PATH=$PATH:"$COMPILER_PATH"
+export PKG_CONFIG_PATH="$RPI_SYSROOT/usr/lib/arm-linux-gnueabihf/pkgconfig"
 
 echo "Configuring..."
-FLOAT=hard
-export PATH=$PATH:/opt/rpi/gcc-linaro-arm-linux-gnueabihf-raspbian/bin/
 echo "Prefix to $PWD..."
 ./configure \
 --sysroot=$RPI_SYSROOT \
---extra-cflags="-mfpu=vfp -mfloat-abi=$FLOAT -mno-apcs-stack-check -mstructure-size-boundary=32 -mno-sched-prolog" \
+--extra-cflags="-mfpu=vfp -mfloat-abi=hard -mno-apcs-stack-check -mstructure-size-boundary=32 -mno-sched-prolog" \
 --enable-cross-compile \
 --enable-shared \
 --enable-static \
@@ -48,15 +70,15 @@ echo "Prefix to $PWD..."
 --disable-filters \
 --disable-encoders \
 --disable-devices \
---disable-ffprobe \
---disable-ffplay \
---disable-ffserver \
---disable-ffmpeg \
+--disable-programs \
 --enable-shared \
 --disable-doc \
 --disable-postproc \
 --enable-gpl \
+--enable-version3 \
 --enable-protocols \
+--enable-libsmbclient \
+--enable-libssh \
 --enable-nonfree \
 --enable-openssl \
 --enable-pthreads \
@@ -93,8 +115,8 @@ echo "Prefix to $PWD..."
 --disable-decoder=h263 \
 --disable-decoder=rv10 \
 --disable-decoder=rv20 \
---disable-decoder=mjpeg \
---disable-decoder=mjpegb \
+--enable-decoder=mjpeg \
+--enable-decoder=mjpegb \
 --disable-decoder=sp5x \
 --disable-decoder=jpegls \
 --enable-decoder=mpeg4 \
@@ -256,8 +278,10 @@ echo "Prefix to $PWD..."
 --disable-decoder=bintext \
 --disable-decoder=xbin \
 --disable-decoder=idf \
+--enable-decoder=opus \
 --cross-prefix=arm-linux-gnueabihf- \
---prefix=$PWD/ffmpeg_compiled
+--prefix=$PWD/ffmpeg_compiled \
+--disable-symver
 
 echo "Building..."
 mkdir $PWD/ffmpeg_compiled

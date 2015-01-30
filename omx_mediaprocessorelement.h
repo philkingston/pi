@@ -38,6 +38,7 @@
 class OMX_MediaProcessorElement : public QQuickItem
 {
     Q_OBJECT
+    Q_PROPERTY(int playbackState READ getPlaybackState)
     Q_PROPERTY(QString source READ source WRITE setSource NOTIFY sourceChanged)
     Q_PROPERTY(bool autoPlay READ autoPlay WRITE setAutoPlay)
     Q_PROPERTY(long streamLength READ streamLength)
@@ -45,6 +46,8 @@ class OMX_MediaProcessorElement : public QQuickItem
 public:
     explicit OMX_MediaProcessorElement(QQuickItem* parent = 0);
     ~OMX_MediaProcessorElement();
+
+    int getPlaybackState() { return m_mediaProc->state(); }
 
     QString source();
     void setSource(QString source);
@@ -56,6 +59,10 @@ public:
         return m_mediaProc;
     }
 
+    // TODO: Make this private.
+    //OMX_TextureProviderSh m_texProvider;
+    OMX_EGLBufferProviderSh m_buffProvider;
+
 public slots:
     Q_INVOKABLE bool play();
     Q_INVOKABLE bool stop();
@@ -65,11 +72,8 @@ public slots:
     Q_INVOKABLE long streamLength();
     Q_INVOKABLE long streamPosition();
 
-    void onTextureDataReady(const OMX_TextureData* textureData);
-
 signals:
-    void textureReady(const OMX_TextureData* textureId);
-    void textureInvalidated();
+    void playbackStateChanged(OMX_MediaProcessor::OMX_MediaProcessorState state);
     void sourceChanged(QString filepath);
 
     void playbackStarted();
@@ -79,8 +83,7 @@ protected:
     QSGNode* updatePaintNode(QSGNode*, UpdatePaintNodeData*);
 
 private:
-    OMX_MediaProcessor*   m_mediaProc;
-    OMX_TextureProviderSh m_texProvider;
+    OMX_MediaProcessor* m_mediaProc;
 
     QString m_source;
     bool m_autoPlay = true;

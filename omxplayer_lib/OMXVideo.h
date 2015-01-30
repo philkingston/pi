@@ -23,7 +23,6 @@
 #if defined(HAVE_OMXLIB)
 
 #include <QObject>
-
 #include <memory>
 
 #include "OMXCore.h"
@@ -37,13 +36,13 @@
 #include "guilib/Geometry.h"
 #include "utils/SingleLock.h"
 
+#include "omx_textureprovider.h"
+
 using namespace std;
 
 class OMX_VideoSurfaceElement;
 class OMX_TextureProvider;
 class OMX_TextureData;
-
-typedef shared_ptr<OMX_TextureProvider> OMX_TextureProviderSh;
 
 
 #define VIDEO_BUFFERS 60
@@ -63,7 +62,7 @@ class COMXVideo : public QObject
 {
     Q_OBJECT
 public:
-  COMXVideo(OMX_TextureProviderSh provider);
+  COMXVideo(OMX_EGLBufferProviderSh provider);
   ~COMXVideo();
 
   // Required overrides
@@ -73,16 +72,15 @@ public:
           OMXClock *clock,
           float display_aspect = 0.0f,
           EDEINTERLACEMODE deinterlace = VS_DEINTERLACEMODE_OFF,
+          OMX_IMAGEFILTERANAGLYPHTYPE anaglyph = OMX_ImageFilterAnaglyphNone,
           bool hdmi_clock_sync = false,
-          float fifo_size = 0.0f,
-          OMX_TextureData* textureData = NULL
-          );
+          int display = 0,
+          int layer = 0,
+          float fifo_size = 0.0f);
   bool PortSettingsChanged();
   void Close(void);
   unsigned int GetFreeSpace();
   unsigned int GetSize();
-  OMXPacket *GetText();
-  int  DecodeText(uint8_t *pData, int iSize, double dts, double pts);
   int  Decode(uint8_t *pData, int iSize, double pts);
   void Reset(void);
   void SetDropState(bool bDrop);
@@ -96,9 +94,6 @@ public:
   bool SubmittedEOS() { return m_submitted_eos; }
   bool BadState() { return m_omx_decoder.BadState(); };
 
-signals:
-  void textureDataReady(const OMX_TextureData* textureData);
-
 protected:
   // Video format
   bool              m_drop_state;
@@ -108,7 +103,6 @@ protected:
 
   OMX_VIDEO_CODINGTYPE m_codingType;
 
-  COMXCoreComponent m_omx_text;
   COMXCoreComponent m_omx_decoder;
   COMXCoreComponent m_omx_render;
   COMXCoreComponent m_omx_sched;
@@ -116,7 +110,6 @@ protected:
   COMXCoreComponent *m_omx_clock;
   OMXClock           *m_av_clock;
 
-  COMXCoreTunel     m_omx_tunnel_text;
   COMXCoreTunel     m_omx_tunnel_decoder;
   COMXCoreTunel     m_omx_tunnel_clock;
   COMXCoreTunel     m_omx_tunnel_sched;
@@ -124,7 +117,6 @@ protected:
   bool              m_is_open;
 
   bool              m_setStartTime;
-  bool              m_setStartTimeText;
 
   uint8_t           *m_extradata;
   int               m_extrasize;
@@ -133,19 +125,21 @@ protected:
 
   bool              m_deinterlace;
   EDEINTERLACEMODE  m_deinterlace_request;
+  OMX_IMAGEFILTERANAGLYPHTYPE m_anaglyph;
   bool              m_hdmi_clock_sync;
-  bool              m_first_text;
+
   // lcarlon: modified members.
-  OMX_TextureProviderSh m_provider;
-  OMX_BUFFERHEADERTYPE* m_eglBuffer;
-  OMX_TextureData*  m_textureData; // Only used in case of re-use of the texture.
+  OMX_EGLBufferProviderSh m_provider;
   // ====
+
   float             m_pixel_aspect;
   bool              m_submitted_eos;
   bool              m_failed_eos;
   OMX_DISPLAYTRANSFORMTYPE m_transform;
   bool              m_settings_changed;
   CCriticalSection  m_critSection;
+  int               m_display;
+  int               m_layer;
 };
 
 #endif
