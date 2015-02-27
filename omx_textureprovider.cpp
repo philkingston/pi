@@ -131,7 +131,7 @@ OMX_TextureData* OMX_TextureProviderQQuickItem::instantiateTexture(QSize size)
    // It seems that only 4byte pixels is supported here.
    int pixelSize = size.width() * size.height() * 4;
    GLubyte* pixel = new GLubyte[pixelSize];
-   memset(pixel, 0, pixelSize);
+   memset(pixel, 0, sizeof(GLubyte) * pixelSize);  // to have a grey texture
    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.width(), size.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
 
    log_info("Creating EGLImageKHR...");
