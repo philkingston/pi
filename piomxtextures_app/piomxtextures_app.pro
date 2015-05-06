@@ -38,7 +38,8 @@ include(piomxtextures_app.pri)
 include($$_PRO_FILE_PWD_/../piomxtextures_src/piomxtextures_src.pri)
 
 SOURCES += \
-   main.cpp \
+    qmlsceneomx.cpp \
+#   main.cpp \
 #  main_ffmpeg.cpp \
 #  main_v4l2.cpp \
 #  main_demux.cpp \
