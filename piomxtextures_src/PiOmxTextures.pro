@@ -49,7 +49,7 @@ headers.files  = \
    omx_textureprovider.h \
    omx_qthread.h \
    omx_globals.h \
-   lc_logging.h
+   ../lc_logging.h
 headers.path   = $$OUT_PWD/piomxtextures
 
 omxplayer_headers.files = \
