@@ -32,6 +32,8 @@ DEFINES += VERBOSE
 DEFINES += ENABLE_VIDEO_TEST
 DEFINES += ENABLE_MEDIA_PROCESSOR
 
+INCLUDE_PATH += ..
+
 include(piomxtextures_app.pri)
 include($$_PRO_FILE_PWD_/../piomxtextures_src/piomxtextures_src.pri)
 
