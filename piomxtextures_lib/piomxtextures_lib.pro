@@ -21,12 +21,11 @@
 # along with PiOmxTextures. If not, see <http://www.gnu.org/licenses/>.
 #
 
-CONFIG += qt no_private_qt_headers_warning
+TEMPLATE = lib
 
-TEMPLATE = subdirs
+VERSION = 4.5.0
 
-SUBDIRS = \
-   piomxtextures_lib \
-   piomxtextures_qt_driver \
-   piomxtextures_app \
-   piomxtextures_pocplayer
+QT += core core-private gui gui-private opengl quick quick-private
+CONFIG += no_private_qt_headers_warning
+
+include($$_PRO_FILE_PWD_/../piomxtextures_src/piomxtextures_src.pri)
