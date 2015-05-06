@@ -27,6 +27,6 @@ TEMPLATE = subdirs
 
 SUBDIRS = \
    piomxtextures_lib \
-   piomxtextures_qt_driver \
    piomxtextures_app \
-   piomxtextures_pocplayer
+   piomxtextures_pocplayer \
+   #piomxtextures_qt_driver
