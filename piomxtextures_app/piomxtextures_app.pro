@@ -45,4 +45,10 @@ SOURCES += \
 #  main_demux.cpp \
 #  main_omxplayer.cpp
 
+HEADERS += \
+    backlight.h \
+    fileio.h \
+    watchdog.h \
+    screendimensions.h
+
 RESOURCES += resources.qrc
