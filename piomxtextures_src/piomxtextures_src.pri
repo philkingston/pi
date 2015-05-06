@@ -34,6 +34,7 @@ INCLUDEPATH += \
    $$PWD/ilclient \
    $$PWD/../3rdparty/LightLogger
 INCLUDEPATH += \
+   $$PWD/.. \
    $$PWD/../3rdparty/LightLogger \
    $$PWD/../3rdparty/LightSmartPtr \
    $$PWD/../3rdparty/ffmpeg/include \
@@ -236,7 +237,7 @@ HEADERS  += \
     $$SRC/omx_reader.h \
     $$SRC/ilclient/* \
     $$SRC/omx_utils.h
-
+    
 HEADERS += \
     $$SRC/omxplayer_lib/Unicode.h \
     $$SRC/omxplayer_lib/SubtitleRenderer.h \

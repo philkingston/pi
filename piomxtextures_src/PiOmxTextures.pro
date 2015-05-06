@@ -33,7 +33,8 @@ error("Either add CONFIG_APP or CONFIG_LIB to DEFINES.")
 
 QT += core core-private gui gui-private opengl quick quick-private
 INCLUDEPATH += $$_PRO_FILE_PWD_/../LightLogger \
-   $$_PRO_FILE_PWD_/../LightSmartPtr
+   $$_PRO_FILE_PWD_/../LightSmartPtr \
+   $$_PRO_FILE_PWD_/..
 
 contains(DEFINES, CONFIG_QMLSCENEOMX) {
 TARGET = qmlsceneomx
@@ -307,13 +308,6 @@ HEADERS += \
     omxplayer_lib/utils/RegExp.h \
     omxplayer_lib/utils/PCMRemap.h \
     omxplayer_lib/utils/log.h
-
-contains(DEFINES, CONFIG_QMLSCENEOMX) {
-    HEADERS += \
-        fileio.h \
-        backlight.h \
-        watchdog.h \
-}
 
 OTHER_FILES += \
     main.qml \
