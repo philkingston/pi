@@ -24,7 +24,7 @@
 /*------------------------------------------------------------------------------
 |    includes
 +-----------------------------------------------------------------------------*/
-#include <QSGOpaqueTextureMaterial>
+#include <QSGTextureMaterial>
 #include <QSGNode>
 #include <QSGTextureProvider>
 #include <QtConcurrent/QtConcurrent>
@@ -89,7 +89,7 @@ QSGNode* OMX_VideoSurfaceElement::updatePaintNode(QSGNode* oldNode, UpdatePaintN
       node->setFlag(QSGNode::OwnsGeometry);
 
       // TODO: Who is freeing the material?
-      QSGOpaqueTextureMaterial* material = new QSGOpaqueTextureMaterial;
+      QSGTextureMaterial* material = new QSGTextureMaterial;
       material->setTexture(m_sgtexture);
       node->setMaterial(material);
       node->setFlag(QSGNode::OwnsMaterial);
