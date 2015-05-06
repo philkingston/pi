@@ -85,6 +85,7 @@ LIBS += -L$$_PRO_FILE_PWD_/3rdparty/ffmpeg/lib \
    -lavformat -lavcodec -lavutil -lswscale -lswresample
 }
 INCLUDEPATH += $$_PRO_FILE_PWD_/3rdparty/ffmpeg/include
+INCLUDEPATH += $$_PRO_FILE_PWD_
 # Add this if building with old firmware.
 INCLUDEPATH += /opt/rpi/sysroot/opt/vc/include/interface/vmcs_host/linux
 # For omxplayer.
