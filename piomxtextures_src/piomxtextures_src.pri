@@ -41,7 +41,7 @@ INCLUDEPATH += \
 LIBS += -lopenmaxil -lGLESv2 -lEGL -lbcm_host -lvcos -lrt -lv4l2
 #LIBS += -lavformat -lavcodec -lavutil
 # Internal
-DEFINES += CONFIG_INCLUDE_FFMPEG
+#DEFINES += CONFIG_INCLUDE_FFMPEG
 contains(DEFINES, CONFIG_INCLUDE_FFMPEG) {
 LIBS += $$PWD/../3rdparty/ffmpeg/lib/libavformat.a \
    $$PWD/../3rdparty/ffmpeg/lib/libavcodec.a \
