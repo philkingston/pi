@@ -27,7 +27,8 @@ QT += core core-private gui gui-private opengl quick quick-private
 CONFIG += no_private_qt_headers_warning
 
 # Macro definitions
-#DEFINES += LOG_LEVEL_DEBUG
+DEFINES += BUILD_LOG_LEVEL_WARNING
+DEFINES += LOG_LEVEL_WARNING
 #DEFINES += VERBOSE
 DEFINES += ENABLE_VIDEO_TEST
 DEFINES += ENABLE_MEDIA_PROCESSOR
