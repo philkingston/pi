@@ -175,6 +175,10 @@ OMX_MediaProcessor::~OMX_MediaProcessor()
    delete m_OMX;
    delete m_omx_pkt;
    delete m_omx_reader;
+
+   LOG_VERBOSE(LOG_TAG, "Freeing textures...");
+   m_provider->free();
+   m_provider = NULL;
 }
 
 /*------------------------------------------------------------------------------
@@ -219,6 +223,12 @@ inline
 bool OMX_MediaProcessor::setFilenameInt(QString filename, OMX_TextureData*& textureData)
 {
    log_verbose_func;
+
+   if(m_filename == filename) {
+       // No change in file, so abort
+       LOG_VERBOSE(LOG_TAG, "Filename not changed, aborting");
+       return true;
+   }
 
    switch (m_state) {
    case STATE_INACTIVE:
