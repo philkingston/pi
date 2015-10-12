@@ -1,7 +1,7 @@
 #
 # Project: PiOmxTextures
 # Author:  Luca Carlon
-# Date:    04.03.2015
+# Date:    08.08.2015
 #
 # Copyright (c) 2012-2015 Luca Carlon. All rights reserved.
 #
@@ -14,7 +14,7 @@
 #
 # PiOmxTextures is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
@@ -23,11 +23,11 @@
 
 TEMPLATE = lib
 
-VERSION = 5.0.0
+QT += quick multimedia
 
-QT += core core-private gui gui-private opengl quick quick-private
-CONFIG += no_private_qt_headers_warning
+OTHER_FILES += video_*
 
-INCLUDEPATH += ..
-
-include($$_PRO_FILE_PWD_/../piomxtextures_src/piomxtextures_src.pri)
+DISTFILES += \
+    audio_simple.qml \
+    video_concurrent.qml \
+    video_loop.qml

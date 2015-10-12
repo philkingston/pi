@@ -24,18 +24,18 @@
 /*------------------------------------------------------------------------------
 |    includes
 +-----------------------------------------------------------------------------*/
-#include "QtMultimedia/qabstractvideosurface.h"
-#include "QtMultimedia/qvideosurfaceformat.h"
-#include "QtCore/qtimer.h"
-#include "QtCore/qmutex.h"
+#include <QQuickItem>
+#include <QAbstractVideoSurface>
+#include <QVideoSurfaceFormat>
+#include <QTimer>
+#include <QMutex>
+#ifdef OGL_CONTEXT_FROM_SURFACE
+#include <QVariant>
+#endif // OGL_CONTEXT_FROM_SURFACE
 
-#include "openmaxilvideorenderercontrol.h"
+#include "openmaxilplayercontrol.h"
 
-#include "lc_logging.h"
-
-static QMutex m_mutex;
-
-#define FPS (30)
+#include "omx_logging.h"
 
 /*------------------------------------------------------------------------------
 |    OpenMAXILVideoBuffer class
@@ -50,8 +50,8 @@ public:
       m_textureId  = textureId;
    }
 
-   ~OpenMAXILVideoBuffer() {
-      log_verbose("VideoBuffer freed.");
+   virtual ~OpenMAXILVideoBuffer() {
+      log_dtor_func;
    }
 
    QVariant handle() const {
@@ -80,14 +80,15 @@ private:
 /*------------------------------------------------------------------------------
 |    OpenMAXILVideoRendererControl::OpenMAXILVideoRendererControl
 +-----------------------------------------------------------------------------*/
-OpenMAXILVideoRendererControl::OpenMAXILVideoRendererControl(OMX_MediaProcessor* p, QObject *parent) :
+OpenMAXILVideoRendererControl::OpenMAXILVideoRendererControl(OpenMAXILPlayerControl* control, QObject* parent) :
    QVideoRendererControl(parent),
-   m_mediaProcessor(p),
+   m_control(control),
+   m_mediaProcessor(control->getMediaProcessor()),
+   m_mutex(QMutex::Recursive),
    m_surface(NULL),
    m_surfaceFormat(NULL),
    m_frame(NULL),
-   m_buffer(NULL),
-   m_updateTimer(new QTimer(this))
+   m_buffer(NULL)
 {
    //connect(m_mediaProcessor, SIGNAL(stateChanged(OMX_MediaProcessor::OMX_MediaProcessorState)),
    //        this, SLOT(onMediaPlayerStateChanged(OMX_MediaProcessor::OMX_MediaProcessorState)));
@@ -97,13 +98,6 @@ OpenMAXILVideoRendererControl::OpenMAXILVideoRendererControl(OMX_MediaProcessor*
            this, SLOT(onTexturesReady()));
    connect(provider.get(), SIGNAL(texturesFreed()),
            this, SLOT(onTexturesFreed()));
-
-   m_updateTimer->setInterval(FPS);
-   m_updateTimer->setSingleShot(false);
-   connect(m_updateTimer, SIGNAL(timeout()),
-           this, SLOT(onUpdateTriggered()));
-
-   m_updateTimer->start();
 }
 
 /*------------------------------------------------------------------------------
@@ -111,15 +105,14 @@ OpenMAXILVideoRendererControl::OpenMAXILVideoRendererControl(OMX_MediaProcessor*
 +-----------------------------------------------------------------------------*/
 OpenMAXILVideoRendererControl::~OpenMAXILVideoRendererControl()
 {
-   log_debug_func;
-
    QMutexLocker locker(&m_mutex);
+   log_dtor_func;
 
    // Stop the surface first.
    if (m_surface)
       m_surface->stop();
 
-   log_warn("Freeing frame and format...");
+   log_verbose("Freeing frame and format...");
    delete m_surfaceFormat;
    delete m_frame;
 #if 0
@@ -142,18 +135,29 @@ void OpenMAXILVideoRendererControl::setSurface(QAbstractVideoSurface* surface)
    log_debug_func;
 
    if (m_surface && m_surface->isActive())
-       m_surface->stop();
+      m_surface->stop();
    m_surface = surface;
+#ifdef OGL_CONTEXT_FROM_SURFACE
+	m_surface->installEventFilter(this);
+#endif // OGL_CONTEXT_FROM_SURFACE
 }
+
+#ifdef OGL_CONTEXT_FROM_SURFACE
+bool OpenMAXILVideoRendererControl::eventFilter(QObject * o, QEvent * e)
+{
+	if (e->type() != QEvent::DynamicPropertyChange)
+		return false;
+	log_debug("GL: %p.", o->property("GLContext").value<QOpenGLContext*>());
+	return false;
+}
+#endif // OGL_CONTEXT_FROM_SURFACE
 
 /*------------------------------------------------------------------------------
 |    OpenMAXILVideoRendererControl::surface
 +-----------------------------------------------------------------------------*/
 QAbstractVideoSurface* OpenMAXILVideoRendererControl::surface() const
 {
-   QMutexLocker locker(&m_mutex);
    log_debug_func;
-
    return m_surface;
 }
 
@@ -162,9 +166,8 @@ QAbstractVideoSurface* OpenMAXILVideoRendererControl::surface() const
 +-----------------------------------------------------------------------------*/
 void OpenMAXILVideoRendererControl::onTexturesReady()
 {
-   onTexturesFreed();
-
    QMutexLocker locker(&m_mutex);
+   onTexturesFreed(); // Cleanup.
 
    log_verbose("Setting up for new textures...");
    OMX_EGLBufferProviderSh provider = m_mediaProcessor->m_provider;
@@ -211,14 +214,14 @@ void OpenMAXILVideoRendererControl::onTexturesFreed()
 {
    QMutexLocker locker(&m_mutex);
 
-   log_verbose("Destroying QVideoSurfaceFormat.");
    if (m_surfaceFormat) {
+      log_verbose("Destroying QVideoSurfaceFormat...");
       delete m_surfaceFormat;
       m_surfaceFormat = NULL;
    }
 
-   log_verbose("Destroying QVideoFrame.");
    if (m_frame) {
+      log_verbose("Destroying QVideoFrame...");
       delete m_frame;
       m_frame = NULL;
    }
@@ -229,23 +232,25 @@ void OpenMAXILVideoRendererControl::onTexturesFreed()
 +-----------------------------------------------------------------------------*/
 void OpenMAXILVideoRendererControl::onUpdateTriggered()
 {
-   // I don't like acquiring two locks at the same time...
-   QMutexLocker locker1(&m_mutex);
-   QMutexLocker locker2(&m_mutexData);
+   QMutexLocker locker(&m_mutex);
 
-   if (!m_mediaProcessor || !m_mediaProcessor->m_provider.get())
+   if (UNLIKELY(!m_mediaProcessor || !m_mediaProcessor->m_provider.get()))
+      return;
+   if (UNLIKELY(!m_surface || !m_frame || !m_surfaceFormat))
       return;
 
-   if (m_surface && m_frame && m_surfaceFormat) {
-      if (!m_surface->isActive() && !m_surface->start(*m_surfaceFormat))
-         log_warn("Failed to start surface.");
+   if (UNLIKELY(!m_surface->isActive() && !m_surface->start(*m_surfaceFormat)))
+      log_warn("Failed to start surface.");
 
-      GLuint t = m_mediaProcessor->m_provider->getNextTexture();
+   GLuint t = m_mediaProcessor->m_provider->getNextTexture();
 
-      //log_debug("Setting texture %u.", t);
-      m_buffer->setHandle(t);
-      m_surface->present(*m_frame);
-   }
+	// It seems that in some cases the fillBufferDone arrives even after
+	// completely flushing the pipeline. This presents frames to be shown
+	// when the player is not actually playing content.
+	if (m_mediaProcessor->state() != OMX_MediaProcessor::STATE_PLAYING)
+		return;
+   m_buffer->setHandle(t);
+	m_surface->present(*m_frame);
 }
 
 /*------------------------------------------------------------------------------
@@ -253,8 +258,11 @@ void OpenMAXILVideoRendererControl::onUpdateTriggered()
 +-----------------------------------------------------------------------------*/
 void OpenMAXILVideoRendererControl::onMediaPlayerStateChanged(OMX_MediaProcessor::OMX_MediaProcessorState state)
 {
+   // FIXME: I should stop the update requests when there is no playback.
+#if 0
    if (state == OMX_MediaProcessor::STATE_PLAYING)
       m_updateTimer->start();
    else
       m_updateTimer->stop();
+#endif
 }

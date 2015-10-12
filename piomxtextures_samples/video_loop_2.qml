@@ -1,7 +1,7 @@
 /*
 * Project: PiOmxTextures
 * Author:  Luca Carlon
-* Date:    16.03.2015
+* Date:    08.24.2015
 *
 * Copyright (c) 2012, 2013, 2014 Luca Carlon. All rights reserved.
 *
@@ -31,36 +31,25 @@ Rectangle {
 
 	anchors.fill: parent
 
+	Component.onCompleted: {
+		var arguments = Qt.application.arguments;
+		if (arguments.length < 3) {
+			console.log("Too few arguments.");
+			Qt.quit();
+		}
+
+		mediaPlayer.source = arguments[2];
+		mediaPlayer.play();
+	}
+
 	MediaPlayer {
 		id: mediaPlayer
-
-		onStopped:
-			 goToNextMedia();
+		loops: MediaPlayer.Infinite
 	}
 
 	VideoOutput {
 		anchors.fill: parent
 		source: mediaPlayer
 		fillMode: VideoOutput.Stretch
-	}
-
-	function showLocalMedia(mediaList) {
-		for (var i = 0; i < mediaList.length; i++)
-			logger.info("" + mediaList[i] + " added to the playlist.");
-		playlist = mediaList;
-		goToNextMedia();
-	}
-
-	function goToNextMedia() {
-		count++;
-		index++;
-		index = index >= playlist.length ? 0 : index;
-
-		logger.info("Play count: " + count + ".");
-		logger.info("Opening video file: " + playlist[index] + ".");
-		logger.info("Uptime: " + uptime.uptimeString() + ".");
-
-		mediaPlayer.source = playlist[index];
-		mediaPlayer.play();
 	}
 }

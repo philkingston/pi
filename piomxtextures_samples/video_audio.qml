@@ -1,9 +1,9 @@
 /*
  * Project: PiOmxTextures
  * Author:  Luca Carlon
- * Date:    04.11.2015
+ * Date:    08.08.2015
  *
- * Copyright (c) 2015 Luca Carlon. All rights reserved.
+ * Copyright (c) 2012-2015 Luca Carlon. All rights reserved.
  *
  * This file is part of PiOmxTextures.
  *
@@ -24,48 +24,49 @@
 import QtQuick 2.0
 import QtMultimedia 5.0
 
+/**
+ * Sample that accepts video URI and audio URI.
+ */
 Rectangle {
-	anchors.fill: parent
+	property string uri1
+	property string uri2
+
+	color: "red"
+
+	Component.onCompleted: {
+		var arguments = Qt.application.arguments;
+		if (arguments.length < 4) {
+			console.log("Too few arguments.");
+			Qt.quit();
+		}
+
+		uri1 = arguments[2];
+		uri2 = arguments[3];
+	}
 
 	Video {
-		id: myVideo
-		anchors.fill: parent
-		muted: false
-		//autoPlay:true
-		//source: "file:///home/pi/big_buck_bunny_1080p_h264.mov"
+		id: video
+		width: parent.width
+		height: parent.height
+		source: uri1
+		autoPlay: true
+	}
 
-		onPlaybackStateChanged: {
-			if (playbackState === MediaPlayer.PlayingState)
-				myTimer.start();
-		}
+	Audio {
+		id: myAudio
+		source: uri2
+		autoPlay: false
 	}
 
 	Timer {
-		property int loops: 0
-
-		id: myTimer
-		interval: 10000
-		repeat: true
-		running: false
-		triggeredOnStart: false
-		onTriggered: {
-			loops++;
-			var index = loops%5;
-			var duration = myVideo.duration;
-			var position = index/5*duration;
-
-			myVideo.seek(position);
-			logger.info("Seeked " + loops + " times. Seeked to " + position + ".");
-		}
+		interval: 3000
+		running: true; repeat: true
+		onTriggered: {myAudio.stop(); myAudio.play()}
 	}
 
-	Item {
-		id: mediaOutput
-		objectName: "mediaOutput"
-
-		function showUrlMedia(uri) {
-			myVideo.source = uri;
-			myVideo.play();
-		}
+	Timer {
+		interval: 5000
+		running: true; repeat: true
+		onTriggered: {video.seek(0)}
 	}
 }

@@ -34,6 +34,7 @@
 
 #include "poc_utils.h"
 #include "poc_qmlutils.h"
+#include "poc_uptime.h"
 
 /*------------------------------------------------------------------------------
 |    definitions
@@ -42,7 +43,10 @@ enum POC_Mode {
 	MODE_PLAYER,
 	MODE_LOOP,
 	MODE_ANIMATIONS,
-	MODE_SEEK
+	MODE_SEEK,
+	MODE_MULTIPLE,
+	MODE_MULTIPLEANIM,
+	MODE_OVERLAYS
 };
 
 /*------------------------------------------------------------------------------
@@ -50,12 +54,15 @@ enum POC_Mode {
 +-----------------------------------------------------------------------------*/
 bool show_media(QQuickView* view, QStringList mediaList)
 {
-	for (int i = 0; i < mediaList.size(); i++)
+   QStringList uriList;
+   for (int i = 0; i < mediaList.size(); i++) {
 		if (!QFile(mediaList[i]).exists())
 			return log_warn("File %s does not exist.", qPrintable(mediaList[i]));
+      uriList.append(QUrl::fromUserInput(mediaList[i]).toString());
+   }
 
 	QObject* rootObject  = dynamic_cast<QObject*>(view->rootObject());
-	QMetaObject::invokeMethod(rootObject, "showLocalMedia", Q_ARG(QVariant, mediaList));
+   QMetaObject::invokeMethod(rootObject, "showLocalMedia", Q_ARG(QVariant, uriList));
 
 	return true;
 }
@@ -63,13 +70,14 @@ bool show_media(QQuickView* view, QStringList mediaList)
 /*------------------------------------------------------------------------------
 |    show_local_media
 +-----------------------------------------------------------------------------*/
-bool show_media(QQuickView* view, QString fileUri)
+bool show_media(QQuickView* view, QString mediaLocation)
 {
-	log_info("Showing media: %s.", qPrintable(fileUri));
+   log_info("Showing media: %s.", qPrintable(mediaLocation));
+   QUrl uri = QUrl::fromUserInput(mediaLocation);
 
 	QObject* rootObject  = dynamic_cast<QObject*>(view->rootObject());
 	QObject* mediaOutput = rootObject->findChild<QObject*>("mediaOutput");
-	QMetaObject::invokeMethod(mediaOutput, "showUrlMedia", Q_ARG(QVariant, fileUri));
+   QMetaObject::invokeMethod(mediaOutput, "showUrlMedia", Q_ARG(QVariant, uri.toString()));
 
 	return true;
 }
@@ -79,6 +87,7 @@ bool show_media(QQuickView* view, QString fileUri)
 +---------------------------------------------------------------------*/
 int main(int argc, char* argv[])
 {
+	QGuiApplication::setAttribute(Qt::AA_ShareOpenGLContexts, true);
 	QGuiApplication app(argc, argv);
 
 	// Utility.
@@ -90,10 +99,17 @@ int main(int argc, char* argv[])
 		currentMode = MODE_LOOP;
 	else if (args.contains("--seektest"))
 		currentMode = MODE_SEEK;
+	else if (args.contains("--multipletest"))
+		currentMode = MODE_MULTIPLE;
+	else if (args.contains("--multipleanimtest"))
+		currentMode = MODE_MULTIPLEANIM;
+	else if (args.contains("--overlaystest"))
+		currentMode = MODE_OVERLAYS;
 	else
 		currentMode = MODE_PLAYER;
 
 	POC_QMLUtils qmlUtils;
+	POC_Uptime uptime;
 
 	QQuickView view;
 
@@ -106,18 +122,29 @@ int main(int argc, char* argv[])
 	view.setFormat(curSurface);
 
 	view.engine()->rootContext()->setContextProperty("utils", &qmlUtils);
+	view.engine()->rootContext()->setContextProperty("uptime", &uptime);
+
 	switch (currentMode) {
 	case MODE_ANIMATIONS:
-		view.setSource(QUrl("qrc:///qml/main_animations.qml"));
+		view.setSource(QUrl(QStringLiteral("qrc:///qml/main_animations.qml")));
 		break;
 	case MODE_LOOP:
-		view.setSource(QUrl("qrc:///qml/main_loop.qml"));
+		view.setSource(QUrl(QStringLiteral("qrc:///qml/main_loop.qml")));
 		break;
 	case MODE_SEEK:
 		view.setSource(QUrl(QStringLiteral("qrc:///qml/main_seektest.qml")));
 		break;
+	case MODE_MULTIPLE:
+		view.setSource(QUrl(QStringLiteral("qrc:///qml/main_multiple.qml")));
+		break;
+	case MODE_OVERLAYS:
+		view.setSource(QUrl(QStringLiteral("qrc:///qml/main_overlays.qml")));
+		break;
+	case MODE_MULTIPLEANIM:
+		view.setSource(QUrl(QStringLiteral("qrc:///qml/main_multipleanim.qml")));
+		break;
 	default:
-		view.setSource(QUrl("qrc:///qml/main.qml"));
+		view.setSource(QUrl(QStringLiteral("qrc:///qml/main.qml")));
 		break;
 	}
 
@@ -136,6 +163,7 @@ int main(int argc, char* argv[])
 	// If file path is provided from the command line, I start the player
 	// immediately.
 	switch (currentMode) {
+	case MODE_MULTIPLEANIM:
 	case MODE_LOOP: {
 		QStringList list;
 		for (int i = 2; i < args.size(); i++)
@@ -150,6 +178,8 @@ int main(int argc, char* argv[])
 		if (args.size() > 1)
 			if (!show_media(&view, args.at(1)))
 				return 1;
+		break;
+	case MODE_MULTIPLE:
 		break;
 	default:
 		if (args.size() > 2)

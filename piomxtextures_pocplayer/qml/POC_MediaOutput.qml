@@ -52,8 +52,7 @@ Item {
     /**
       * Determines the type of media and plays it using the passed path.
       */
-    function showLocalMedia(mediaPath) {
-		  var mediaUri = "file://" + mediaPath;
+	 function showLocalMedia(mediaUri) {
         showUrlMedia(mediaUri);
     }
 
@@ -85,8 +84,12 @@ Item {
       */
     function showVideo(videoUri) {
         state = "VIDEO";
+
+		 console.log("Setting media source...");
         mediaPlayer.source = videoUri;
-        mediaPlayer.play();
+
+		 //console.log("Sending play command...");
+        //mediaPlayer.play();
     }
 
     /**
@@ -104,7 +107,7 @@ Item {
     function showAudio(audioUri) {
         state = "VIDEO";
         mediaPlayer.source = audioUri;
-        mediaPlayer.play();
+        //mediaPlayer.play();
     }
 
     /**

@@ -1,9 +1,9 @@
 /*
  * Project: PiOmxTextures
  * Author:  Luca Carlon
- * Date:    12.31.2012
+ * Date:    04.12.2015
  *
- * Copyright (c) 2012 Luca Carlon. All rights reserved.
+ * Copyright (c) 2015 Luca Carlon. All rights reserved.
  *
  * This file is part of PiOmxTextures.
  *
@@ -14,31 +14,42 @@
  *
  * PiOmxTextures is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with PiOmxTextures. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef OMX_GLOBALS_H
-#define OMX_GLOBALS_H
+#ifndef POC_UPTIME_H
+#define POC_UPTIME_H
 
 /*------------------------------------------------------------------------------
 |    includes
 +-----------------------------------------------------------------------------*/
-#include <EGL/egl.h>
+#include <QElapsedTimer>
+#include <QObject>
 
 /*------------------------------------------------------------------------------
-|    definitions
+|    POC_Uptime classs
 +-----------------------------------------------------------------------------*/
-#define LIKELY(x)       __builtin_expect((x), 1)
-#define UNLIKELY(x)     __builtin_expect((x), 0)
+class POC_Uptime : public QObject
+{
+	Q_OBJECT
+	Q_PROPERTY(qint64 uptime READ uptime)
 
-EGLDisplay get_egl_display();
-EGLContext get_global_egl_context();
+public:
+	POC_Uptime();
 
-const char* get_egl_errstr(EGLint err);
-const char* get_egl_errstr();
+	qint64 uptime() {
+		return m_timer.elapsed();
+	}
 
-#endif // OMX_GLOBALS_H
+public slots:
+	QString uptimeString();
+
+private:
+	QElapsedTimer m_timer;
+};
+
+#endif // POC_UPTIME_H

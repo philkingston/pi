@@ -39,6 +39,7 @@
 |    defintions
 +-----------------------------------------------------------------------------*/
 class OpenMAXILVideoBuffer;
+class OpenMAXILPlayerControl;
 
 /*------------------------------------------------------------------------------
 |    OpenMAXILVideoRendererControl class
@@ -47,7 +48,7 @@ class OpenMAXILVideoRendererControl : public QVideoRendererControl
 {
    Q_OBJECT
 public:
-   explicit OpenMAXILVideoRendererControl(OMX_MediaProcessor* p, QObject* parent = 0);
+   explicit OpenMAXILVideoRendererControl(OpenMAXILPlayerControl* control, QObject* parent = 0);
    ~OpenMAXILVideoRendererControl();
    void setSurface(QAbstractVideoSurface* surface);
    QAbstractVideoSurface* surface() const;
@@ -58,15 +59,20 @@ public slots:
    void onUpdateTriggered();
    void onMediaPlayerStateChanged(OMX_MediaProcessor::OMX_MediaProcessorState);
 
+#ifdef OGL_CONTEXT_FROM_SURFACE
+protected:
+	bool eventFilter(QObject*, QEvent*);
+#endif // OGL_CONTEXT_FROM_SURFACE
+
 private:
+   OpenMAXILPlayerControl* m_control;
    OMX_MediaProcessor* m_mediaProcessor;
-   QMutex m_mutexData;
+   QMutex m_mutex;
 
    QAbstractVideoSurface* m_surface;
    QVideoSurfaceFormat* m_surfaceFormat;
    QVideoFrame* m_frame;
    OpenMAXILVideoBuffer* m_buffer;
-   QTimer* m_updateTimer;
 };
 
 #endif // OPENMAXILVIDEORENDERERCONTROL_H
